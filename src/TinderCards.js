@@ -1,62 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TinderCard from "react-tinder-card";
+import instance from "./axios";
 import "./tindercards.css";
 
 const TinderCards = () => {
+    const loggedId = 1;
 
-    const [people, setPeople] = useState([
-        {
-            name: 'Elon Musk',
-            url: 'https://thumbor.forbes.com/thumbor/fit-in/416x416/filters%3Aformat%28jpg%29/https%3A%2F%2Fspecials-images.forbesimg.com%2Fimageserve%2F5f47d4de7637290765bce495%2F0x0.jpg%3Fbackground%3D000000%26cropX1%3D1398%26cropX2%3D3908%26cropY1%3D594%26cropY2%3D3102'
-        },
-        {
-            name: 'Jeff Bezos',
-            url: 'https://media.gq.com.mx/photos/5f23041351bcbdbc95b13466/master/pass/JEFF.jpg'
-        },
-        {
-            name: 'Sandra Bullock',
-            url: 'https://upload.wikimedia.org/wikipedia/commons/3/3b/Sandra_Bullock_%289192365016%29_%28cropped%29.jpg'
-        },
-        {
-            name: 'Elisabeth Lail',
-            url: 'https://es.web.img3.acsta.net/r_1280_720/pictures/18/10/31/10/38/2640328.jpg'
-        },
-    ]);
+    const [people, setPeople] = useState([]);
 
-    const swiped = (dir, nameToDelete) => {
-        console.log("removing: " + nameToDelete);
-        //setLastDirection(dir);
+    const swiped = (dir, userId) => {
+        
+        if(dir === "right") {
+            console.log("removing: " + userId + " " + dir);
+            addLike(loggedId.valueOf(), userId);
+        }
     }
 
-    const outOfFrame = (name) => {
-        console.log(name + " left the screen!");
+    const outOfFrame = (userId, dir) => {
+                
     }
 
-    return (
-        <div className="tinderCards">
-            <div className="tinderCards__cardContainer">
-                {people.map((person) => (
-                    <TinderCard
-                        className="swipe"
-                        key={person.name}
-                        preventSwipe={["up", "down"]}
-                        onSwipe={(dir) => swiped(dir, person.name)}
-                        onCardLeftScreen={() => outOfFrame(person.name)}
-                    >
-                        <div
-                            style={{backgroundImage: `url(${person.url})`}}
-                            className="card"
-                        >
-                            <h3>{person.name}</h3>
+    const addLike = async (fromUser, toUser) => {
+        console.log(fromUser, toUser);
+        const data = {
+            fromUser: fromUser,
+            toUser: toUser
+        };
+        console.log(JSON.stringify(data));
+        const send = await fetch("http://localhost:8001/api/addLike", {
+            method: 'POST',
+            body: JSON.stringify({
+                fromUser: fromUser,
+                toUser: toUser
+            })
+        });
+        const res = await send.json();
+    }
 
-                        </div>
+    const getCards = async () => {
+        const res = await fetch("http://localhost:8001/api/getUsers/" + loggedId);
+        const data = await res.json();
+        setPeople(data);
+    }
 
-                    </TinderCard>
-                ))}
+    useEffect(() => {
+        getCards();
+    }, []);
+
+    if(loggedId !== 1) {
+        return (
+            <div className="tinderCards">
+                <div className="tinderCards__cardContainer">
+                    <h3>You need to log in first</h3>
+                </div>
+                
             </div>
-            
-        </div>
-    )
+        )
+    } else {
+        let status = "";
+        let statusDot = "";
+        people.map((person) => {
+            status = person.status;
+        });
+
+        if(status === "Offline") {
+            statusDot = "Desconectado/a"
+        } else {
+            statusDot = "Activo/a recientemente";
+        }
+
+        return (
+            <div className="tinderCards">
+                <div className="tinderCards__cardContainer">
+                    {people.map((person) => (
+                        <TinderCard
+                            className="swipe"
+                            key={person.userId}
+                            preventSwipe={["up", "down"]}
+                            onSwipe={(dir) => swiped(dir, person.userId)}
+                            onCardLeftScreen={() => outOfFrame(person.userId)}
+                        >
+                            <div
+                                style={{backgroundImage: `url(${person.avatar || 'https://st.depositphotos.com/1779253/5140/v/600/depositphotos_51405259-stock-illustration-male-avatar-profile-picture-use.jpg' })`}}
+                                className="card"
+                            >
+                                <h3>{ person.userName }, { person.age || "" }</h3>
+                                <p>{ statusDot }</p>
+                            </div>
+    
+                        </TinderCard>
+                    ))}
+                </div>
+                
+            </div>
+        )
+    }
 }
 
 export default TinderCards;

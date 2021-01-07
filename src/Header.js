@@ -8,13 +8,15 @@ const Header = () => {
     return (
         <div className="header">
             
-            <IconButton>
+            <IconButton href="/profile">
                 <PersonIcon fontSize="large" className="header__icon" />
             </IconButton>
 
-            <img src="https://1000logos.net/wp-content/uploads/2018/07/tinder-logo.png" alt="Logo" className="header__logo" />
+            <IconButton href="/">
+                <img src="https://1000logos.net/wp-content/uploads/2018/07/tinder-logo.png" alt="Logo" className="header__logo" />
+            </IconButton>
             
-            <IconButton>
+            <IconButton href="/messages">
                 <ForumIcon fontSize="large" className="header__icon" />
             </IconButton>
 
